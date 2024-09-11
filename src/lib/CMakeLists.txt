@@ -11,9 +11,6 @@ else ()
     set(PSNR_LIB_DEP_SCOPE "PUBLIC")
 
     set(PSNR_LIB_SRCS "lib.cpp")
-    if (PUGIXML_HEADER_ONLY)
-        list(APPEND PSNR_LIB_SRCS "${pugixml_SOURCE_DIR}/src/pugixml.cpp")
-    endif ()
 endif ()
 
 set(PSNR_LIB_NAME psnr)
@@ -26,9 +23,5 @@ set_target_properties(${PSNR_LIB_NAME} PROPERTIES
 target_compile_features(${PSNR_LIB_NAME} ${PSNR_LIB_DEP_SCOPE} cxx_std_20)
 target_compile_definitions(${PSNR_LIB_NAME} PRIVATE ${PSNR_LIB_COMPILE_DEFS})
 target_include_directories(${PSNR_LIB_NAME} ${PSNR_LIB_DEP_SCOPE}
-        ${OpenCV_INCLUDE_DIR}
-        "${tlct_SOURCE_DIR}/src/include"
-        "${PROJECT_SOURCE_DIR}/src/include")
-target_link_libraries(${PSNR_LIB_NAME} ${PSNR_LIB_DEP_SCOPE}
-        ${OpenCV_LIBS}
-        tlct)
+        "${PROJECT_SOURCE_DIR}/src/include"
+)
