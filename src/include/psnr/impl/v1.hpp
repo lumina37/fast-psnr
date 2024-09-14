@@ -7,19 +7,19 @@
 
 #include "psnr/common/defines.h"
 
-namespace psnr::_native {
+namespace psnr::_v1 {
 
 namespace rgs = std::ranges;
 
-template <typename TR, typename TI>
-[[nodiscard]] static constexpr TR pow2(TI num)
+template <typename TR, typename TP>
+[[nodiscard]] static constexpr TR pow2(TP num)
 {
     return (TR)num * (TR)num;
 }
 
 template <typename T>
     requires std::is_unsigned_v<T>
-[[nodiscard]] static inline double compute_psnr(const T* plhs, const T* prhs, const size_t len)
+[[nodiscard]] static inline double compute(const T* plhs, const T* prhs, const size_t len)
 {
     const T* lhs_cursor = plhs;
     const T* rhs_cursor = prhs;
@@ -38,12 +38,12 @@ template <typename T>
     return psnr;
 }
 
-} // namespace psnr::_native
+} // namespace psnr::_v1
 
-namespace psnr::native {
+namespace psnr::v1 {
 
-namespace _ = psnr::_native;
+namespace _ = psnr::_v1;
 
-using _::compute_psnr;
+using _::compute;
 
-} // namespace psnr::native
+} // namespace psnr::v1

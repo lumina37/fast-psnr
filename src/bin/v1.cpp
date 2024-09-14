@@ -21,10 +21,13 @@ int main(int argc, char* argv[])
     YuvFrame lhs_frame{ysize};
     YuvFrame rhs_frame{ysize};
 
-    for (const int i : rgs::views::iota(0, 1)) {
+    constexpr int frames = 100;
+    double psnr_acc = 0;
+    for (const int i : rgs::views::iota(0, frames)) {
         lhs_yuvio.poll_into(lhs_frame);
         rhs_yuvio.poll_into(rhs_frame);
-        double res = psnr::native::compute_psnr(lhs_frame.getY(), rhs_frame.getY(), ysize);
-        std::cout << res << std::endl;
+        double psnr = psnr::v1::compute(lhs_frame.getY(), rhs_frame.getY(), ysize);
+        psnr_acc += psnr;
     }
+    std::cout << psnr_acc / frames << std::endl;
 }
