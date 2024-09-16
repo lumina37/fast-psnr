@@ -11,10 +11,10 @@ namespace psnr::_v1 {
 
 namespace rgs = std::ranges;
 
-template <typename TR, typename TP>
-[[nodiscard]] static constexpr TR pow2(TP num)
+template <typename T>
+[[nodiscard]] static constexpr T pow2(T num)
 {
-    return (TR)num * (TR)num;
+    return num * num;
 }
 
 template <typename T>
@@ -28,13 +28,14 @@ template <typename T>
         int64_t l = *lhs_cursor;
         int64_t r = *rhs_cursor;
         int64_t diff = l - r;
-        acc += pow2<decltype(acc)>(diff);
+        acc += pow2(diff);
         lhs_cursor++;
         rhs_cursor++;
     }
 
     const double mse = (double)acc / (double)len;
-    const double psnr = 10 * std::log10(pow2<double>(std::numeric_limits<T>::max()) / mse);
+    const uint64_t max = std::numeric_limits<T>::max();
+    const double psnr = 10 * std::log10((double)pow2(max) / mse);
     return psnr;
 }
 

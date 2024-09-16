@@ -1,6 +1,10 @@
 function(psnr_add_executable name srcs)
     add_executable(${name} ${srcs})
-    target_link_libraries(${name} PRIVATE psnr)
+    target_link_libraries(${name} PRIVATE psnr fmt)
+    target_include_directories(${name} PRIVATE
+            ${argparse_SOURCE_DIR}/include
+            ${fmt_SOURCE_DIR}/include
+    )
 
     if (TLCT_ENABLE_LTO)
         set_target_properties(${name} PROPERTIES
@@ -11,4 +15,4 @@ function(psnr_add_executable name srcs)
     copy_dlls_if_needed(${name})
 endfunction()
 
-psnr_add_executable(bench-native "v1.cpp")
+psnr_add_executable(bench-v1 "v1.cpp")
