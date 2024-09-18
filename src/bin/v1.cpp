@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
     for (const auto i : rgs::views::iota(0, (int)frames)) {
         lhs_yuvio.poll_into(lhs_frame);
         rhs_yuvio.poll_into(rhs_frame);
-        double psnr = psnr::v1::compute(lhs_frame.getY(), rhs_frame.getY(), ysize);
+        double psnr = psnr::v1::compute_psnr(lhs_frame.getY(), rhs_frame.getY(), ysize);
         psnr_acc += psnr;
     }
     const double psnr_avg = psnr_acc / (double)frames;

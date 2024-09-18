@@ -19,7 +19,7 @@ template <typename T>
 
 template <typename T>
     requires std::is_unsigned_v<T>
-[[nodiscard]] static inline double compute(const T* plhs, const T* prhs, const size_t len)
+[[nodiscard]] static inline double compute_mse(const T* plhs, const T* prhs, const size_t len)
 {
     const T* lhs_cursor = plhs;
     const T* rhs_cursor = prhs;
@@ -34,8 +34,16 @@ template <typename T>
     }
 
     const double mse = (double)acc / (double)len;
-    const uint64_t max = std::numeric_limits<T>::max();
-    const double psnr = 10 * std::log10((double)pow2(max) / mse);
+    return mse;
+}
+
+template <typename T, size_t depth = sizeof(T) * 8>
+    requires std::is_unsigned_v<T> && (depth > 0)
+[[nodiscard]] static inline double compute_psnr(const T* plhs, const T* prhs, const size_t len)
+{
+    const double mse = compute_mse(plhs, prhs, len);
+    constexpr uint64_t maxval = 1 << depth;
+    const double psnr = 10 * std::log10((double)pow2(maxval) / mse);
     return psnr;
 }
 
@@ -45,6 +53,6 @@ namespace psnr::v1 {
 
 namespace _ = psnr::_v1;
 
-using _::compute;
+using _::compute_psnr;
 
 } // namespace psnr::v1
