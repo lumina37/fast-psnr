@@ -3,6 +3,7 @@
 
 #include <argparse/argparse.hpp>
 #include <fmt/core.h>
+#include <ittnotify.h>
 
 #include "psnr.hpp"
 
@@ -42,12 +43,20 @@ int main(int argc, char* argv[])
     YuvFrame rhs_frame{ysize};
 
     double psnr_acc = 0;
+
+    __itt_domain* domain = __itt_domain_create("Domain.Global");
+    __itt_string_handle* handle_main = __itt_string_handle_create("psnr");
+    __itt_task_begin(domain, __itt_null, __itt_null, handle_main);
+
     for (const auto i : rgs::views::iota(0, (int)frames)) {
         lhs_yuvio.poll_into(lhs_frame);
         rhs_yuvio.poll_into(rhs_frame);
         double psnr = psnr::v1::compute_psnr(lhs_frame.getY(), rhs_frame.getY(), ysize);
         psnr_acc += psnr;
     }
+
+    __itt_task_end(domain);
+
     const double psnr_avg = psnr_acc / (double)frames;
     fmt::print("{}", psnr_avg);
 }
