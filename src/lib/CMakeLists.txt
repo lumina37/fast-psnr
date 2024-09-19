@@ -25,4 +25,3 @@ target_compile_definitions(${PSNR_LIB_NAME} PRIVATE ${PSNR_LIB_COMPILE_DEFS})
 target_include_directories(${PSNR_LIB_NAME} ${PSNR_LIB_DEP_SCOPE}
         "${PROJECT_SOURCE_DIR}/src/include"
 )
-target_link_libraries(${PSNR_LIB_NAME} ${PSNR_LIB_DEP_SCOPE} ITT)

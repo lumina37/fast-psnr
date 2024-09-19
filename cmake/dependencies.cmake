@@ -11,6 +11,3 @@ FetchContent_Declare(fmt
         GIT_TAG 11.0.2
 )
 FetchContent_MakeAvailable(fmt)
-
-list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
-find_package(ITT)
