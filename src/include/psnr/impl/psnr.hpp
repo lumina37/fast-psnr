@@ -9,8 +9,8 @@
 
 namespace psnr::_psnr {
 
-template <typename TOp, typename Tv, size_t depth = sizeof(Tv) * 8>
-    requires concepts::CMseOp<TOp> && std::is_same_v<typename TOp::Tv, Tv>
+template <concepts::CMseOp TOp, typename Tv, size_t depth = sizeof(Tv) * 8>
+    requires std::is_same_v<typename TOp::Tv, Tv>
 [[nodiscard]] static inline double PsnrOp(const Tv* lhs, const Tv* rhs, const size_t len)
 {
     const double mse = TOp()(lhs, rhs, len);

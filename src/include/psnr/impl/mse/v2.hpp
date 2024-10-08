@@ -9,8 +9,7 @@
 
 namespace psnr::_mse::v2 {
 
-template <typename Tv_>
-    requires std::is_unsigned_v<Tv_>
+template <std::unsigned_integral Tv_>
 class MseOp_
 {
 public:
@@ -88,8 +87,7 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
     return sqrdiff_acc;
 }
 
-template <typename Tv>
-    requires std::is_unsigned_v<Tv>
+template <std::unsigned_integral Tv>
 uint64_t MseOp_<Tv>::sqrdiff(const Tv* lhs, const Tv* rhs, size_t len) noexcept
 {
     return v1::MseOp_<Tv>::sqrdiff(lhs, rhs, len);

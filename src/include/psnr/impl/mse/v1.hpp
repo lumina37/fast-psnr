@@ -7,8 +7,7 @@
 
 namespace psnr::_mse::v1 {
 
-template <typename Tv_>
-    requires std::is_unsigned_v<Tv_>
+template <std::unsigned_integral Tv_>
 class MseOp_
 {
 public:
