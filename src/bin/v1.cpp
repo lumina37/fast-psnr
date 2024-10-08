@@ -35,14 +35,14 @@ int main(int argc, char* argv[])
     const size_t ysize = width * height;
     auto lhs_yuvio = psnr::Yuv420IO::fromPath(lhs_fpath, ysize);
     auto rhs_yuvio = psnr::Yuv420IO::fromPath(rhs_fpath, ysize);
-    psnr::Yuv420Frame lhs_frame{ysize};
-    psnr::Yuv420Frame rhs_frame{ysize};
+    psnr::Yuv420Frame lframe{ysize};
+    psnr::Yuv420Frame rframe{ysize};
 
     double psnr_acc = 0;
     for (const auto i : rgs::views::iota(0, (int)frames)) {
-        lhs_yuvio.poll_into(lhs_frame);
-        rhs_yuvio.poll_into(rhs_frame);
-        double psnr = psnr::PsnrOp<psnr::mse::v1::MseOp<uint8_t>>(lhs_frame.getY(), rhs_frame.getY(), ysize);
+        lhs_yuvio.poll_into(lframe);
+        rhs_yuvio.poll_into(rframe);
+        double psnr = psnr::PsnrOp<psnr::mse::v1::MseOp<uint8_t>>(lframe.getY(), rframe.getY(), ysize);
         psnr_acc += psnr;
     }
 

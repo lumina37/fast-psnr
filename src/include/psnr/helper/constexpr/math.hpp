@@ -42,9 +42,16 @@ static constexpr inline bool is_pow_of_2(const Tv v)
 
 template <size_t to, typename T>
     requires std::is_integral_v<T> && (is_pow_of_2(to))
-static constexpr inline T align_to(T v)
+static constexpr inline T align_up(T v)
 {
-    return (v + (to - 1)) & -to;
+    return (v + (to - 1)) & ((~to) + 1);
+};
+
+template <size_t to, typename T>
+    requires std::is_integral_v<T> && (is_pow_of_2(to))
+static constexpr inline T align_down(T v)
+{
+    return v & ((~to) + 1);
 };
 
 } // namespace psnr::_hp
