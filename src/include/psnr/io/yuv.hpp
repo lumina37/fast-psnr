@@ -4,30 +4,32 @@
 #include <fstream>
 
 #include "psnr/common/defines.h"
-#include "psnr/helper/static_math.hpp"
+#include "psnr/helper/constexpr/math.hpp"
 
-namespace psnr::_io {
+namespace psnr {
+
+namespace _io {
 
 namespace fs = std::filesystem;
 
 constexpr size_t SIMD_FETCH_SIZE = 128 / 8;
 
 template <typename TFrame_>
-class YuvIO
+class YuvIO_
 {
 public:
     using TFrame = TFrame_;
 
-    PSNR_API inline YuvIO(std::ifstream&& ifs, size_t ysize)
+    PSNR_API inline YuvIO_(std::ifstream&& ifs, size_t ysize)
         : ifs_(std::move(ifs)), ysize_(ysize), usize_(ysize >> TFrame::Ushift), vsize_(ysize >> TFrame::Vshift),
           total_size_(ysize_ + usize_ + vsize_){};
-    PSNR_API static inline YuvIO fromPath(const fs::path& fpath, size_t ysize)
+    PSNR_API static inline YuvIO_ fromPath(const fs::path& fpath, size_t ysize)
     {
         std::ifstream ifs{fpath, std::ios::binary};
         return {std::move(ifs), ysize};
     }
 
-    PSNR_API inline YuvIO& skip(int n);
+    PSNR_API inline YuvIO_& skip(int n);
     PSNR_API inline TFrame poll();
     PSNR_API inline void poll_into(TFrame& frame);
 
@@ -40,14 +42,14 @@ private:
 };
 
 template <typename TFrame>
-YuvIO<TFrame>& YuvIO<TFrame>::skip(int n)
+YuvIO_<TFrame>& YuvIO_<TFrame>::skip(int n)
 {
     ifs_.seekg(total_size_);
     return *this;
 }
 
 template <typename TFrame>
-TFrame YuvIO<TFrame>::poll()
+TFrame YuvIO_<TFrame>::poll()
 {
     TFrame frame{ysize_, usize_, vsize_};
     ifs_.read((char*)frame.y_, ysize_);
@@ -57,7 +59,7 @@ TFrame YuvIO<TFrame>::poll()
 }
 
 template <typename TFrame>
-void YuvIO<TFrame>::poll_into(TFrame& frame)
+void YuvIO_<TFrame>::poll_into(TFrame& frame)
 {
     ifs_.read((char*)frame.y_, ysize_);
     ifs_.read((char*)frame.u_, usize_);
@@ -65,30 +67,30 @@ void YuvIO<TFrame>::poll_into(TFrame& frame)
 }
 
 template <typename TElem_, size_t Ushift_, size_t Vshift_>
-class YuvFrame
+class YuvFrame_
 {
 public:
-    friend class YuvIO<YuvFrame>;
+    friend class YuvIO_<YuvFrame_>;
 
     using TElem = TElem_;
     static constexpr size_t Ushift = Ushift_;
     static constexpr size_t Vshift = Vshift_;
 
-    PSNR_API inline YuvFrame(size_t ysize, size_t usize, size_t vsize) : ysize_(ysize), usize_(usize), vsize_(vsize)
+    PSNR_API inline YuvFrame_(size_t ysize, size_t usize, size_t vsize) : ysize_(ysize), usize_(usize), vsize_(vsize)
     {
         this->alloc();
     }
-    PSNR_API explicit inline YuvFrame(size_t ysize) : ysize_(ysize), usize_(ysize >> Ushift), vsize_(ysize >> Vshift)
+    PSNR_API explicit inline YuvFrame_(size_t ysize) : ysize_(ysize), usize_(ysize >> Ushift), vsize_(ysize >> Vshift)
     {
         this->alloc();
     }
 
-    YuvFrame(const YuvFrame& rhs) = delete;
-    YuvFrame operator=(const YuvFrame& rhs) = delete;
-    PSNR_API inline YuvFrame(YuvFrame&& rhs) noexcept
+    YuvFrame_(const YuvFrame_& rhs) = delete;
+    YuvFrame_ operator=(const YuvFrame_& rhs) = delete;
+    PSNR_API inline YuvFrame_(YuvFrame_&& rhs) noexcept
         : ysize_(rhs.ysize_), usize_(rhs.usize_), vsize_(rhs.vsize_), buffer_(std::exchange(rhs.buffer_, nullptr)),
           y_(std::exchange(rhs.y_, nullptr)), u_(std::exchange(rhs.u_, nullptr)), v_(std::exchange(rhs.v_, nullptr)){};
-    PSNR_API inline YuvFrame& operator=(YuvFrame&& rhs) noexcept
+    PSNR_API inline YuvFrame_& operator=(YuvFrame_&& rhs) noexcept
     {
         ysize_ = rhs.ysize_;
         usize_ = rhs.usize_;
@@ -100,7 +102,7 @@ public:
         return *this;
     };
 
-    PSNR_API inline ~YuvFrame() { std::free(buffer_); }
+    PSNR_API inline ~YuvFrame_() { std::free(buffer_); }
 
     [[nodiscard]] PSNR_API inline size_t getYSize() const noexcept { return ysize_; }
     [[nodiscard]] PSNR_API inline size_t getUSize() const noexcept { return usize_; }
@@ -122,7 +124,7 @@ private:
 };
 
 template <typename TElem_, size_t Ushift_, size_t Vshift_>
-void YuvFrame<TElem_, Ushift_, Vshift_>::alloc()
+void YuvFrame_<TElem_, Ushift_, Vshift_>::alloc()
 {
     {
         constexpr size_t ubase = 1 << (Ushift * 2);
@@ -156,7 +158,23 @@ void YuvFrame<TElem_, Ushift_, Vshift_>::alloc()
     }
 }
 
-template class YuvFrame<uint8_t, 1, 1>;
-using Yuv420Frame = YuvFrame<uint8_t, 1, 1>;
+using Yuv420Frame = YuvFrame_<uint8_t, 1, 1>;
+template class YuvFrame_<uint8_t, 1, 1>;
+using Yuv420IO = YuvIO_<Yuv420Frame>;
+template class YuvIO_<Yuv420Frame>;
 
-} // namespace psnr::_io
+} // namespace _io
+
+namespace io {
+
+namespace _ = _io;
+
+using _::YuvFrame_;
+using _::YuvIO_;
+
+using _::Yuv420Frame;
+using _::Yuv420IO;
+
+} // namespace io
+
+} // namespace psnr

@@ -2,11 +2,12 @@
 
 #include "io/yuv.hpp"
 
-namespace psnr::io {
+namespace psnr {
 
-namespace _ = _io;
+using io::YuvFrame_;
+using io::YuvIO_;
 
-using _::YuvFrame;
-using _::YuvIO;
+using io::Yuv420Frame;
+using io::Yuv420IO;
 
-} // namespace psnr::io
+} // namespace psnr

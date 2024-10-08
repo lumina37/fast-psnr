@@ -1,3 +1,10 @@
 #pragma once
 
-#include "impl/v1.hpp"
+#include "impl/mse.hpp"
+#include "impl/psnr.hpp"
+
+namespace psnr {
+
+using psnr::PsnrOp;
+
+} // namespace psnr
