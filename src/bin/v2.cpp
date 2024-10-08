@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
     for (const auto i : rgs::views::iota(0, (int)frames)) {
         lhs_yuvio.poll_into(lframe);
         rhs_yuvio.poll_into(rframe);
-        double psnr = psnr::PsnrOp<psnr::mse::v2::MseOp<uint8_t>>(lframe.getY(), rframe.getY(), ysize);
+        double psnr = psnr::PsnrOp<psnr::mse::v2::MseOp_<uint8_t>>(lframe.getY(), rframe.getY(), ysize);
         psnr_acc += psnr;
     }
 

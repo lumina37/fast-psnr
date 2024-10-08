@@ -9,12 +9,12 @@ namespace psnr::_mse::v1 {
 
 template <typename Tv_>
     requires std::is_unsigned_v<Tv_>
-class MseOp
+class MseOp_
 {
 public:
     using Tv = Tv_;
 
-    [[nodiscard]] inline double operator()(const Tv* lhs, const Tv* rhs, const size_t len) const noexcept
+    [[nodiscard]] PSNR_API inline double operator()(const Tv* lhs, const Tv* rhs, const size_t len) const noexcept
     {
         uint64_t sqrdiff_acc = sqrdiff(lhs, rhs, len);
         const double mse = (double)sqrdiff_acc / (double)len;
@@ -38,12 +38,16 @@ public:
     }
 };
 
+template class MseOp_<uint8_t>;
+using MseOpu8 = MseOp_<uint8_t>;
+
 } // namespace psnr::_mse::v1
 
 namespace psnr::mse::v1 {
 
 namespace _ = _mse::v1;
 
-using _::MseOp;
+using _::MseOp_;
+using _::MseOpu8;
 
 } // namespace psnr::mse::v1

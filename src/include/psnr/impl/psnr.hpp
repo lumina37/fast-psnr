@@ -19,6 +19,9 @@ template <typename TOp, typename Tv, size_t depth = sizeof(Tv) * 8>
     return psnr;
 }
 
+template double PsnrOp<psnr::mse::v1::MseOpu8>(const uint8_t* lhs, const uint8_t* rhs, const size_t len);
+template double PsnrOp<psnr::mse::v2::MseOpu8>(const uint8_t* lhs, const uint8_t* rhs, const size_t len);
+
 } // namespace psnr::_psnr
 
 namespace psnr::psnr {
