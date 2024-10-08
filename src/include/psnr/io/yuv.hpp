@@ -140,13 +140,13 @@ void YuvFrame_<TElem_, Ushift_, Vshift_>::alloc()
             }
         }
 
-        size_t aligned_ysize = _hp::align_to<SIMD_FETCH_SIZE>(ysize_);
-        size_t aligned_usize = _hp::align_to<SIMD_FETCH_SIZE>(usize_);
+        size_t aligned_ysize = _hp::align_up<SIMD_FETCH_SIZE>(ysize_);
+        size_t aligned_usize = _hp::align_up<SIMD_FETCH_SIZE>(usize_);
         size_t aligned_vsize;
         if constexpr (Ushift == Vshift) {
             aligned_vsize = aligned_usize;
         } else {
-            aligned_vsize = _hp::align_to<SIMD_FETCH_SIZE>(vsize_);
+            aligned_vsize = _hp::align_up<SIMD_FETCH_SIZE>(vsize_);
         }
 
         const size_t total_size = aligned_ysize + aligned_usize + aligned_vsize + SIMD_FETCH_SIZE;

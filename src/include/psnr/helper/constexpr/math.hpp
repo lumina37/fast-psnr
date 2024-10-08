@@ -5,6 +5,12 @@
 
 namespace psnr::_hp {
 
+template <typename T>
+[[nodiscard]] static constexpr inline T pow2(T num)
+{
+    return num * num;
+}
+
 template <size_t to, typename T>
     requires std::is_integral_v<T> && (to % 2 == 0)
 [[nodiscard]] static constexpr inline T round_to(T v)
@@ -20,25 +26,19 @@ template <typename Tv>
     return std::bit_width(v) - 1;
 }
 
-template <size_t base, typename T>
-    requires std::is_integral_v<T> && (base % 2 == 0)
-[[nodiscard]] static constexpr inline bool is_mul_of(T v)
-{
-    return (v & (1 << log2(base))) == 0;
-};
-
-template <typename T>
-[[nodiscard]] static constexpr inline T pow2(T num)
-{
-    return num * num;
-}
-
 template <typename Tv>
     requires std::is_unsigned_v<Tv>
 [[nodiscard]] static constexpr inline bool is_pow_of_2(const Tv v)
 {
     return (v & (v - 1)) == 0;
 }
+
+template <size_t base, typename T>
+    requires std::is_integral_v<T> && (is_pow_of_2(base))
+[[nodiscard]] static constexpr inline bool is_mul_of(T v)
+{
+    return (v & (1 << log2(base))) == 0;
+};
 
 template <size_t to, typename T>
     requires std::is_integral_v<T> && (is_pow_of_2(to))
@@ -48,10 +48,24 @@ template <size_t to, typename T>
 };
 
 template <size_t to, typename T>
+    requires std::is_pointer_v<T> && (is_pow_of_2(to))
+[[nodiscard]] static constexpr inline T align_up(T v)
+{
+    return (T)align_up<to>((size_t)v);
+};
+
+template <size_t to, typename T>
     requires std::is_integral_v<T> && (is_pow_of_2(to))
 [[nodiscard]] static constexpr inline T align_down(T v)
 {
     return v & ((~to) + 1);
+};
+
+template <size_t to, typename T>
+    requires std::is_pointer_v<T> && (is_pow_of_2(to))
+[[nodiscard]] static constexpr inline T align_down(T v)
+{
+    return (T)align_down<to>((size_t)v);
 };
 
 } // namespace psnr::_hp

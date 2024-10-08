@@ -16,3 +16,4 @@ function(psnr_add_executable name srcs)
 endfunction()
 
 psnr_add_executable(bench-v1 "v1.cpp")
+psnr_add_executable(bench-v2 "v2.cpp")

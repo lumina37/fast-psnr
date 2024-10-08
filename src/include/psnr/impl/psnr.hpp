@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <concepts>
 
 #include "psnr/concepts.hpp"
@@ -10,9 +11,9 @@ namespace psnr::_psnr {
 
 template <typename TOp, typename Tv, size_t depth = sizeof(Tv) * 8>
     requires concepts::CMseOp<TOp> && std::is_same_v<typename TOp::Tv, Tv>
-[[nodiscard]] static inline double PsnrOp(const Tv* plhs, const Tv* prhs, const size_t len)
+[[nodiscard]] static inline double PsnrOp(const Tv* lhs, const Tv* rhs, const size_t len)
 {
-    const double mse = TOp()(plhs, prhs, len);
+    const double mse = TOp()(lhs, rhs, len);
     constexpr uint64_t maxval = 1 << depth;
     const double psnr = 10 * std::log10((double)_hp::pow2(maxval) / mse);
     return psnr;
