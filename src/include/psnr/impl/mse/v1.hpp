@@ -16,20 +16,8 @@ public:
 
     [[nodiscard]] inline double operator()(const Tv* lhs, const Tv* rhs, const size_t len) const noexcept
     {
-        uint64_t acc = 0;
-
-        const Tv* lhs_cursor = lhs;
-        const Tv* rhs_cursor = rhs;
-        for (size_t i = 0; i < len; i++) {
-            int64_t l = *lhs_cursor;
-            int64_t r = *rhs_cursor;
-            int64_t diff = l - r;
-            acc += _hp::pow2(diff);
-            lhs_cursor++;
-            rhs_cursor++;
-        }
-
-        const double mse = (double)acc / (double)len;
+        uint64_t sqrdiff_acc = sqrdiff(lhs, rhs, len);
+        const double mse = (double)sqrdiff_acc / (double)len;
         return mse;
     }
 

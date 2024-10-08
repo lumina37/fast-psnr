@@ -37,12 +37,12 @@ public:
             return v1::MseOp<Tv>()(lhs, rhs, len);
         }
 
-        uint64_t acc = 0;
-        acc += v1::MseOp<Tv>::sqrdiff(lhead, rhead, lhead - lhs);
-        acc += sqrdiff(lhead, rhead, ltail - lhead);
-        acc += v1::MseOp<Tv>::sqrdiff(ltail, rtail, lhs + len - ltail);
+        uint64_t sqrdiff_acc = 0;
+        sqrdiff_acc += v1::MseOp<Tv>::sqrdiff(lhead, rhead, lhead - lhs);
+        sqrdiff_acc += sqrdiff(lhead, rhead, ltail - lhead);
+        sqrdiff_acc += v1::MseOp<Tv>::sqrdiff(ltail, rtail, lhs + len - ltail);
 
-        const double mse = (double)acc / (double)len;
+        const double mse = (double)sqrdiff_acc / (double)len;
         return mse;
     }
 
