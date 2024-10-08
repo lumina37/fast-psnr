@@ -11,12 +11,13 @@ namespace rgs = std::ranges;
 
 int main(int argc, char* argv[])
 {
-    argparse::ArgumentParser program("v1", PSNR_VERSION, argparse::default_arguments::all);
+    argparse::ArgumentParser program("v1", PSNR_GIT_TAG, argparse::default_arguments::all);
     program.add_argument("width").help("frame width").scan<'i', size_t>();
     program.add_argument("height").help("frame height").scan<'i', size_t>();
     program.add_argument("frames").help("frames").scan<'i', size_t>();
     program.add_argument("lpath").help("file path of the lhs yuv").required();
     program.add_argument("rpath").help("file path of the rhs yuv").required();
+    program.add_description(PSNR_COMPILE_INFO);
 
     try {
         program.parse_args(argc, argv);
