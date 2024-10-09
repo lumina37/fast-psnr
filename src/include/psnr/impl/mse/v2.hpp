@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <concepts>
+#include <cstddef>
 #include <immintrin.h>
 
 #include "psnr/common/defines.h"
@@ -57,20 +58,20 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
     const size_t step = sizeof(__m128i) / sizeof(Tv);
 
     uint64_t sqrdiff_acc = 0;
-    __m256i zeromask = _mm256_setzero_si256();
+    const __m256i zeromask = _mm256_setzero_si256();
     __m256i sqrdiff_simd_acc = zeromask;
 
     for (size_t i = 0; i < simd_len; i++) {
-        __m256i u8l = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)lhs_cursor));
-        __m256i u8r = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)rhs_cursor));
+        const __m256i u8l = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)lhs_cursor));
+        const __m256i u8r = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)rhs_cursor));
         lhs_cursor += step;
         rhs_cursor += step;
 
-        __m256i i16diff = _mm256_sub_epi16(u8l, u8r);
-        __m256i u16sqr = _mm256_mullo_epi16(i16diff, i16diff);
-        __m256i u16losqr = _mm256_unpacklo_epi16(u16sqr, zeromask);
+        const __m256i i16diff = _mm256_sub_epi16(u8l, u8r);
+        const __m256i u16sqr = _mm256_mullo_epi16(i16diff, i16diff);
+        const __m256i u16losqr = _mm256_unpacklo_epi16(u16sqr, zeromask);
         sqrdiff_simd_acc = _mm256_add_epi32(sqrdiff_simd_acc, u16losqr);
-        __m256i u16hisqr = _mm256_unpackhi_epi16(u16sqr, zeromask);
+        const __m256i u16hisqr = _mm256_unpackhi_epi16(u16sqr, zeromask);
         sqrdiff_simd_acc = _mm256_add_epi32(sqrdiff_simd_acc, u16hisqr);
 
         constexpr size_t overflow_len = 1 << (8 * (sizeof(uint32_t) / sizeof(uint16_t)) - 1);

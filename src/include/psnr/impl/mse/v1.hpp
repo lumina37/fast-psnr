@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <concepts>
+#include <cstddef>
 
 #include "psnr/common/defines.h"
 #include "psnr/helper/constexpr/math.hpp"
@@ -26,9 +27,9 @@ public:
         const Tv* rhs_cursor = rhs;
         uint64_t acc = 0;
         for (size_t i = 0; i < len; i++) {
-            int64_t l = *lhs_cursor;
-            int64_t r = *rhs_cursor;
-            int64_t diff = l - r;
+            const int64_t l = *lhs_cursor;
+            const int64_t r = *rhs_cursor;
+            const int64_t diff = l - r;
             acc += _hp::pow2(diff);
             lhs_cursor++;
             rhs_cursor++;
