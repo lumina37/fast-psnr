@@ -52,20 +52,21 @@ public:
 template <>
 uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t len) noexcept
 {
-    const Tv* lhs_cursor = lhs;
-    const Tv* rhs_cursor = rhs;
+    const uint8_t* lhs_cursor = lhs;
+    const uint8_t* rhs_cursor = rhs;
     const size_t simd_len = len / sizeof(__m128i);
-    const size_t step = sizeof(__m128i) / sizeof(Tv);
+    const size_t step = sizeof(__m128i) / sizeof(uint8_t);
+    constexpr size_t group_len = 1 << (8 * (sizeof(uint32_t) / sizeof(uint16_t)) - 1);
+    const size_t groups = simd_len / group_len;
+    const size_t resi_len = simd_len - groups * group_len;
 
     uint64_t sqrdiff_acc = 0;
     const __m256i zeromask = _mm256_setzero_si256();
     __m256i sqrdiff_simd_acc = zeromask;
 
-    for (size_t i = 0; i < simd_len; i++) {
+    auto dump_unit = [&](const uint8_t* lhs_cursor, const uint8_t* rhs_cursor) mutable {
         const __m256i u8l = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)lhs_cursor));
         const __m256i u8r = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)rhs_cursor));
-        lhs_cursor += step;
-        rhs_cursor += step;
 
         const __m256i i16diff = _mm256_sub_epi16(u8l, u8r);
         const __m256i u16sqr = _mm256_mullo_epi16(i16diff, i16diff);
@@ -73,13 +74,24 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
         sqrdiff_simd_acc = _mm256_add_epi32(sqrdiff_simd_acc, u16losqr);
         const __m256i u16hisqr = _mm256_unpackhi_epi16(u16sqr, zeromask);
         sqrdiff_simd_acc = _mm256_add_epi32(sqrdiff_simd_acc, u16hisqr);
+    };
 
-        constexpr size_t overflow_len = 1 << (8 * (sizeof(uint32_t) / sizeof(uint16_t)) - 1);
-        if (_hp::is_mul_of<overflow_len>(i)) [[unlikely]] {
-            auto* tmp = (uint32_t*)&sqrdiff_simd_acc;
-            sqrdiff_acc += (tmp[0] + tmp[1] + tmp[2] + tmp[3] + tmp[4] + tmp[5] + tmp[6] + tmp[7]);
-            sqrdiff_simd_acc = zeromask;
+    for (size_t igroup = 0; igroup < groups; igroup++) {
+        for (size_t i = 0; i < group_len; i++) {
+            dump_unit(lhs_cursor, rhs_cursor);
+            lhs_cursor += step;
+            rhs_cursor += step;
         }
+
+        auto* tmp = (uint32_t*)&sqrdiff_simd_acc;
+        sqrdiff_acc += (tmp[0] + tmp[1] + tmp[2] + tmp[3] + tmp[4] + tmp[5] + tmp[6] + tmp[7]);
+        sqrdiff_simd_acc = zeromask;
+    }
+
+    for (size_t i = 0; i < resi_len; i++) {
+        dump_unit(lhs_cursor, rhs_cursor);
+        lhs_cursor += step;
+        rhs_cursor += step;
     }
 
     auto* tmp = (uint32_t*)&sqrdiff_simd_acc;
