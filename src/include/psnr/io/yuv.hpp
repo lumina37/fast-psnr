@@ -1,7 +1,7 @@
 #pragma once
 
+#include <cstdio>
 #include <filesystem>
-#include <fstream>
 
 #include "psnr/common/defines.h"
 #include "psnr/helper/constexpr/math.hpp"
@@ -20,13 +20,13 @@ class YuvIO_
 public:
     using TFrame = TFrame_;
 
-    PSNR_API inline YuvIO_(std::ifstream&& ifs, size_t ysize)
-        : ifs_(std::move(ifs)), ysize_(ysize), usize_(ysize >> TFrame::Ushift), vsize_(ysize >> TFrame::Vshift),
+    PSNR_API inline YuvIO_(std::unique_ptr<FILE>&& file, size_t ysize)
+        : file_(std::move(file)), ysize_(ysize), usize_(ysize >> TFrame::Ushift), vsize_(ysize >> TFrame::Vshift),
           total_size_(ysize_ + usize_ + vsize_){};
     PSNR_API static inline YuvIO_ fromPath(const fs::path& fpath, size_t ysize)
     {
-        std::ifstream ifs{fpath, std::ios::binary};
-        return {std::move(ifs), ysize};
+        auto file = std::make_unique<FILE>(fopen((char*)fpath.c_str(), "rb"));
+        return {std::move(file), ysize};
     }
 
     PSNR_API inline YuvIO_& skip(int n);
@@ -34,7 +34,7 @@ public:
     PSNR_API inline void poll_into(TFrame& frame);
 
 private:
-    std::ifstream ifs_;
+    std::unique_ptr<FILE> file_;
     size_t ysize_;
     size_t usize_;
     size_t vsize_;
@@ -44,7 +44,7 @@ private:
 template <typename TFrame>
 YuvIO_<TFrame>& YuvIO_<TFrame>::skip(int n)
 {
-    ifs_.seekg(total_size_);
+    fseek(file_.get(), n * total_size_, SEEK_CUR);
     return *this;
 }
 
@@ -52,18 +52,18 @@ template <typename TFrame>
 TFrame YuvIO_<TFrame>::poll()
 {
     TFrame frame{ysize_, usize_, vsize_};
-    ifs_.read((char*)frame.y_, ysize_);
-    ifs_.read((char*)frame.u_, usize_);
-    ifs_.read((char*)frame.v_, vsize_);
+    fread((char*)frame.y_, 1, ysize_, file_.get());
+    fread((char*)frame.u_, 1, usize_, file_.get());
+    fread((char*)frame.v_, 1, vsize_, file_.get());
     return frame;
 }
 
 template <typename TFrame>
 void YuvIO_<TFrame>::poll_into(TFrame& frame)
 {
-    ifs_.read((char*)frame.y_, ysize_);
-    ifs_.read((char*)frame.u_, usize_);
-    ifs_.read((char*)frame.v_, vsize_);
+    fread((char*)frame.y_, 1, ysize_, file_.get());
+    fread((char*)frame.u_, 1, usize_, file_.get());
+    fread((char*)frame.v_, 1, vsize_, file_.get());
 }
 
 template <typename TElem_, size_t Ushift_, size_t Vshift_>
