@@ -1,4 +1,5 @@
 #include <filesystem>
+#include <iostream>
 #include <ranges>
 
 #include <argparse/argparse.hpp>
@@ -39,14 +40,18 @@ int main(int argc, char* argv[])
     psnr::Yuv420Frame lframe{ysize};
     psnr::Yuv420Frame rframe{ysize};
 
-    double psnr_acc = 0;
-    for (const auto i : rgs::views::iota(0, (int)frames)) {
-        lhs_yuvio.poll_into(lframe);
-        rhs_yuvio.poll_into(rframe);
-        double psnr = psnr::PsnrOp<psnr::mse::v2::MseOp_<uint8_t>>(lframe.getY(), rframe.getY(), ysize);
-        psnr_acc += psnr;
-    }
+    try {
+        double psnr_acc = 0;
+        for (const auto i : rgs::views::iota(0, (int)frames)) {
+            lhs_yuvio.poll_into(lframe);
+            rhs_yuvio.poll_into(rframe);
+            double psnr = psnr::PsnrOp<psnr::mse::v2::MseOp_<uint8_t>>(lframe.getY(), rframe.getY(), ysize);
+            psnr_acc += psnr;
+        }
 
-    const double psnr_avg = psnr_acc / (double)frames;
-    fmt::print("{}", psnr_avg);
+        const double psnr_avg = psnr_acc / (double)frames;
+        fmt::print("{}", psnr_avg);
+    } catch (std::exception& err) {
+        std::cout << err.what() << std::endl;
+    }
 }
