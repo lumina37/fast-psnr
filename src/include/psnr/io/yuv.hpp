@@ -129,30 +129,30 @@ void YuvFrame_<TElem_, Ushift_, Vshift_>::alloc()
     {
         constexpr size_t ubase = 1 << (Ushift * 2);
 
-        if (!_hp::is_mul_of<ubase>(ysize_)) {
+        if (!_hp::isMulOf<ubase>(ysize_)) {
             return;
         }
 
         if constexpr (Ushift != Vshift) {
             constexpr size_t vbase = 1 << (Vshift * 2);
-            if (!_hp::is_mul_of<vbase>(ysize_)) {
+            if (!_hp::isMulOf<vbase>(ysize_)) {
                 return;
             }
         }
 
-        size_t aligned_ysize = _hp::align_up<SIMD_FETCH_SIZE>(ysize_);
-        size_t aligned_usize = _hp::align_up<SIMD_FETCH_SIZE>(usize_);
+        size_t aligned_ysize = _hp::alignUp<SIMD_FETCH_SIZE>(ysize_);
+        size_t aligned_usize = _hp::alignUp<SIMD_FETCH_SIZE>(usize_);
         size_t aligned_vsize;
         if constexpr (Ushift == Vshift) {
             aligned_vsize = aligned_usize;
         } else {
-            aligned_vsize = _hp::align_up<SIMD_FETCH_SIZE>(vsize_);
+            aligned_vsize = _hp::alignUp<SIMD_FETCH_SIZE>(vsize_);
         }
 
         const size_t total_size = aligned_ysize + aligned_usize + aligned_vsize + SIMD_FETCH_SIZE;
         buffer_ = std::malloc(total_size);
 
-        y_ = (TElem*)_hp::round_to<SIMD_FETCH_SIZE>((size_t)buffer_);
+        y_ = (TElem*)_hp::roundTo<SIMD_FETCH_SIZE>((size_t)buffer_);
         u_ = (TElem*)((size_t)y_ + aligned_ysize);
         v_ = (TElem*)((size_t)u_ + aligned_usize);
     }

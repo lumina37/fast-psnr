@@ -1,4 +1,5 @@
 #include <filesystem>
+#include <iostream>
 #include <ranges>
 
 #include <argparse/argparse.hpp>
@@ -11,7 +12,7 @@ namespace rgs = std::ranges;
 
 int main(int argc, char* argv[])
 {
-    argparse::ArgumentParser program("v1", PSNR_VERSION, argparse::default_arguments::all);
+    argparse::ArgumentParser program("v3", PSNR_VERSION, argparse::default_arguments::all);
     program.add_argument("width").help("frame width").scan<'i', size_t>();
     program.add_argument("height").help("frame height").scan<'i', size_t>();
     program.add_argument("frames").help("frames").scan<'i', size_t>();
@@ -43,7 +44,7 @@ int main(int argc, char* argv[])
     for (const auto i : rgs::views::iota(0, (int)frames)) {
         lhs_yuvio.poll_into(lframe);
         rhs_yuvio.poll_into(rframe);
-        double psnr = psnr::PsnrOp<psnr::mse::v1::MseOpu8>(lframe.getY(), rframe.getY(), ysize);
+        double psnr = psnr::PsnrOp<psnr::mse::v3::MseOpu8>(lframe.getY(), rframe.getY(), ysize);
         psnr_acc += psnr;
     }
 

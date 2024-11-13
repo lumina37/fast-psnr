@@ -3,7 +3,7 @@
 include(cmake/policies.cmake)
 
 project(PSNR
-        VERSION 0.0.1
+        VERSION 0.0.0.1
         LANGUAGES CXX
 )
 

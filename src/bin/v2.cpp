@@ -12,13 +12,13 @@ namespace rgs = std::ranges;
 
 int main(int argc, char* argv[])
 {
-    argparse::ArgumentParser program("v2", PSNR_GIT_TAG, argparse::default_arguments::all);
+    argparse::ArgumentParser program("v2", PSNR_VERSION, argparse::default_arguments::all);
     program.add_argument("width").help("frame width").scan<'i', size_t>();
     program.add_argument("height").help("frame height").scan<'i', size_t>();
     program.add_argument("frames").help("frames").scan<'i', size_t>();
     program.add_argument("lpath").help("file path of the lhs yuv").required();
     program.add_argument("rpath").help("file path of the rhs yuv").required();
-    program.add_description(PSNR_COMPILE_INFO);
+    program.add_epilog(PSNR_COMPILE_INFO);
 
     try {
         program.parse_args(argc, argv);
@@ -40,18 +40,14 @@ int main(int argc, char* argv[])
     psnr::Yuv420Frame lframe{ysize};
     psnr::Yuv420Frame rframe{ysize};
 
-    try {
-        double psnr_acc = 0;
-        for (const auto i : rgs::views::iota(0, (int)frames)) {
-            lhs_yuvio.poll_into(lframe);
-            rhs_yuvio.poll_into(rframe);
-            double psnr = psnr::PsnrOp<psnr::mse::v2::MseOp_<uint8_t>>(lframe.getY(), rframe.getY(), ysize);
-            psnr_acc += psnr;
-        }
-
-        const double psnr_avg = psnr_acc / (double)frames;
-        fmt::print("{}", psnr_avg);
-    } catch (std::exception& err) {
-        std::cout << err.what() << std::endl;
+    double psnr_acc = 0;
+    for (const auto i : rgs::views::iota(0, (int)frames)) {
+        lhs_yuvio.poll_into(lframe);
+        rhs_yuvio.poll_into(rframe);
+        double psnr = psnr::PsnrOp<psnr::mse::v2::MseOpu8>(lframe.getY(), rframe.getY(), ysize);
+        psnr_acc += psnr;
     }
+
+    const double psnr_avg = psnr_acc / (double)frames;
+    fmt::print("{}", psnr_avg);
 }

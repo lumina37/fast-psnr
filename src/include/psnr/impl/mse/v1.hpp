@@ -14,7 +14,7 @@ class MseOp_
 public:
     using Tv = Tv_;
 
-    [[nodiscard]] PSNR_API inline double operator()(const Tv* lhs, const Tv* rhs, const size_t len) const noexcept
+    [[nodiscard]] PSNR_API static inline double mse(const Tv* lhs, const Tv* rhs, const size_t len) noexcept
     {
         uint64_t sqrdiff_acc = sqrdiff(lhs, rhs, len);
         const double mse = (double)sqrdiff_acc / (double)len;

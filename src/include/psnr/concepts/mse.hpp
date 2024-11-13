@@ -4,10 +4,10 @@
 
 namespace psnr::concepts {
 
-template <typename TMseOp>
-concept CMseOp = std::is_unsigned_v<typename TMseOp::Tv> &&
-                 requires(const TMseOp::Tv* lhs, const TMseOp::Tv* rhs, const size_t len) {
-                     { std::declval<TMseOp>()(lhs, rhs, len) } -> std::floating_point;
-                 };
+template <typename Self>
+concept CMseOp =
+    std::is_unsigned_v<typename Self::Tv> && requires(const Self::Tv* lhs, const Self::Tv* rhs, const size_t len) {
+        { Self::mse(lhs, rhs, len) } -> std::floating_point;
+    };
 
 } // namespace psnr::concepts
