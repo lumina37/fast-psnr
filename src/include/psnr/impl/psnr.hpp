@@ -2,6 +2,8 @@
 
 #include <cmath>
 #include <concepts>
+#include <cstddef>
+#include <cstdint>
 
 #include "psnr/concepts.hpp"
 #include "psnr/helper/constexpr/math.hpp"

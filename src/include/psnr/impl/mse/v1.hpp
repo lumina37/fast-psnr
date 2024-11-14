@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include <concepts>
-#include <cstddef>
+#include <cstdint>
 
 #include "psnr/common/defines.h"
 #include "psnr/helper/constexpr/math.hpp"

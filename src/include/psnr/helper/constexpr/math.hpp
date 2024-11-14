@@ -2,6 +2,7 @@
 
 #include <bit>
 #include <concepts>
+#include <cstddef>
 
 namespace psnr::_hp {
 
