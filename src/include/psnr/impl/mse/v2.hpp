@@ -4,7 +4,6 @@
 #include <cstdint>
 #include <immintrin.h>
 
-#include "psnr/common/defines.h"
 #include "psnr/helper/constexpr/math.hpp"
 #include "v1.hpp"
 
@@ -16,7 +15,7 @@ class MseOp_
 public:
     using Tv = Tv_;
 
-    [[nodiscard]] PSNR_API static inline double mse(const Tv* lhs, const Tv* rhs, const size_t len) noexcept
+    [[nodiscard]] static inline double mse(const Tv* lhs, const Tv* rhs, const size_t len) noexcept
     {
         const Tv* lhead = _hp::alignUp<sizeof(__m128i)>(lhs);
         const Tv* rhead = _hp::alignUp<sizeof(__m128i)>(rhs);

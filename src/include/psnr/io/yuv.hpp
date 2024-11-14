@@ -6,7 +6,6 @@
 #include <fstream>
 #include <utility>
 
-#include "psnr/common/defines.h"
 #include "psnr/helper/constexpr/math.hpp"
 
 namespace psnr {
@@ -23,18 +22,18 @@ class YuvIO_
 public:
     using TFrame = TFrame_;
 
-    PSNR_API inline YuvIO_(std::ifstream&& ifs, size_t ysize)
+    inline YuvIO_(std::ifstream&& ifs, size_t ysize)
         : ifs_(std::move(ifs)), ysize_(ysize), usize_(ysize >> TFrame::Ushift), vsize_(ysize >> TFrame::Vshift),
-          total_size_(ysize_ + usize_ + vsize_){};
-    PSNR_API static inline YuvIO_ fromPath(const fs::path& fpath, size_t ysize)
+          total_size_(ysize_ + usize_ + vsize_) {};
+    static inline YuvIO_ fromPath(const fs::path& fpath, size_t ysize)
     {
         std::ifstream ifs{fpath, std::ios::binary};
         return {std::move(ifs), ysize};
     }
 
-    PSNR_API inline YuvIO_& skip(int n);
-    PSNR_API inline TFrame poll();
-    PSNR_API inline void poll_into(TFrame& frame);
+    inline YuvIO_& skip(int n);
+    inline TFrame poll();
+    inline void poll_into(TFrame& frame);
 
 private:
     std::ifstream ifs_;
@@ -79,21 +78,21 @@ public:
     static constexpr size_t Ushift = Ushift_;
     static constexpr size_t Vshift = Vshift_;
 
-    PSNR_API inline YuvFrame_(size_t ysize, size_t usize, size_t vsize) : ysize_(ysize), usize_(usize), vsize_(vsize)
+    inline YuvFrame_(size_t ysize, size_t usize, size_t vsize) : ysize_(ysize), usize_(usize), vsize_(vsize)
     {
         this->alloc();
     }
-    PSNR_API explicit inline YuvFrame_(size_t ysize) : ysize_(ysize), usize_(ysize >> Ushift), vsize_(ysize >> Vshift)
+    explicit inline YuvFrame_(size_t ysize) : ysize_(ysize), usize_(ysize >> Ushift), vsize_(ysize >> Vshift)
     {
         this->alloc();
     }
 
     YuvFrame_(const YuvFrame_& rhs) = delete;
     YuvFrame_ operator=(const YuvFrame_& rhs) = delete;
-    PSNR_API inline YuvFrame_(YuvFrame_&& rhs) noexcept
+    inline YuvFrame_(YuvFrame_&& rhs) noexcept
         : ysize_(rhs.ysize_), usize_(rhs.usize_), vsize_(rhs.vsize_), buffer_(std::exchange(rhs.buffer_, nullptr)),
-          y_(std::exchange(rhs.y_, nullptr)), u_(std::exchange(rhs.u_, nullptr)), v_(std::exchange(rhs.v_, nullptr)){};
-    PSNR_API inline YuvFrame_& operator=(YuvFrame_&& rhs) noexcept
+          y_(std::exchange(rhs.y_, nullptr)), u_(std::exchange(rhs.u_, nullptr)), v_(std::exchange(rhs.v_, nullptr)) {};
+    inline YuvFrame_& operator=(YuvFrame_&& rhs) noexcept
     {
         ysize_ = rhs.ysize_;
         usize_ = rhs.usize_;
@@ -105,14 +104,14 @@ public:
         return *this;
     };
 
-    PSNR_API inline ~YuvFrame_() { std::free(buffer_); }
+    inline ~YuvFrame_() { std::free(buffer_); }
 
-    [[nodiscard]] PSNR_API inline size_t getYSize() const noexcept { return ysize_; }
-    [[nodiscard]] PSNR_API inline size_t getUSize() const noexcept { return usize_; }
-    [[nodiscard]] PSNR_API inline size_t getVSize() const noexcept { return vsize_; }
-    [[nodiscard]] PSNR_API inline const TElem* getY() const noexcept { return y_; }
-    [[nodiscard]] PSNR_API inline const TElem* getU() const noexcept { return u_; }
-    [[nodiscard]] PSNR_API inline const TElem* getV() const noexcept { return v_; }
+    [[nodiscard]] inline size_t getYSize() const noexcept { return ysize_; }
+    [[nodiscard]] inline size_t getUSize() const noexcept { return usize_; }
+    [[nodiscard]] inline size_t getVSize() const noexcept { return vsize_; }
+    [[nodiscard]] inline const TElem* getY() const noexcept { return y_; }
+    [[nodiscard]] inline const TElem* getU() const noexcept { return u_; }
+    [[nodiscard]] inline const TElem* getV() const noexcept { return v_; }
 
 private:
     inline void alloc();
