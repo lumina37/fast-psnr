@@ -1,9 +1,9 @@
 #include <cstddef>
 #include <filesystem>
+#include <iostream>
 #include <ranges>
 
 #include <argparse/argparse.hpp>
-#include <fmt/core.h>
 
 #include "psnr.hpp"
 
@@ -12,7 +12,7 @@ namespace rgs = std::ranges;
 
 int main(int argc, char* argv[])
 {
-    argparse::ArgumentParser program("v2", psnr_VERSION, argparse::default_arguments::all);
+    argparse::ArgumentParser program("v1", psnr_VERSION, argparse::default_arguments::all);
     program.add_argument("width").help("frame width").scan<'i', size_t>();
     program.add_argument("height").help("frame height").scan<'i', size_t>();
     program.add_argument("frames").help("frames").scan<'i', size_t>();
@@ -23,8 +23,8 @@ int main(int argc, char* argv[])
     try {
         program.parse_args(argc, argv);
     } catch (const std::exception& err) {
-        fmt::print("{}\n", err.what());
-        fmt::print("{}\n", program.help().str());
+        std::cerr << err.what() << std::endl;
+        std::cerr << program;
         std::exit(1);
     }
 
@@ -49,5 +49,5 @@ int main(int argc, char* argv[])
     }
 
     const double psnr_avg = psnr_acc / (double)frames;
-    fmt::print("{}", psnr_avg);
+    std::cout << psnr_avg << std::endl;
 }

@@ -1,9 +1,9 @@
 #include <cstddef>
 #include <filesystem>
+#include <iostream>
 #include <ranges>
 
 #include <argparse/argparse.hpp>
-#include <fmt/core.h>
 
 #include "psnr.hpp"
 
@@ -23,8 +23,8 @@ int main(int argc, char* argv[])
     try {
         program.parse_args(argc, argv);
     } catch (const std::exception& err) {
-        fmt::print("{}\n", err.what());
-        fmt::print("{}\n", program.help().str());
+        std::cerr << err.what() << std::endl;
+        std::cerr << program;
         std::exit(1);
     }
 
@@ -49,5 +49,5 @@ int main(int argc, char* argv[])
     }
 
     const double psnr_avg = psnr_acc / (double)frames;
-    fmt::print("{}", psnr_avg);
+    std::cout << psnr_avg << std::endl;
 }
