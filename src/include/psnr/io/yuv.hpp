@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <utility>
 
 #include "psnr/common/defines.h"
 #include "psnr/helper/constexpr/math.hpp"
