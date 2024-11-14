@@ -13,9 +13,10 @@ else ()
     set(PSNR_LIB_SRCS "lib.cpp")
 endif ()
 
-set(PSNR_LIB_NAME psnr)
+set(PSNR_LIB_NAME psnr-lib)
 add_library(${PSNR_LIB_NAME} ${PSNR_LIB_TYPE} ${PSNR_LIB_SRCS})
 set_target_properties(${PSNR_LIB_NAME} PROPERTIES
+        OUTPUT_NAME ${PROJECT_NAME}
         VERSION ${PSNR_VERSION}
         SOVERSION ${PSNR_VERSION}
         DEBUG_POSTFIX "-${PSNR_VERSION}d"

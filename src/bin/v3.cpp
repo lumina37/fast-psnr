@@ -12,7 +12,7 @@ namespace rgs = std::ranges;
 
 int main(int argc, char* argv[])
 {
-    argparse::ArgumentParser program("v3", PSNR_VERSION, argparse::default_arguments::all);
+    argparse::ArgumentParser program("v3", psnr_VERSION, argparse::default_arguments::all);
     program.add_argument("width").help("frame width").scan<'i', size_t>();
     program.add_argument("height").help("frame height").scan<'i', size_t>();
     program.add_argument("frames").help("frames").scan<'i', size_t>();

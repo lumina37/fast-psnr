@@ -1,6 +1,6 @@
 function(psnr_add_executable name srcs)
     add_executable(${name} ${srcs})
-    target_link_libraries(${name} PRIVATE psnr fmt)
+    target_link_libraries(${name} PRIVATE psnr-lib fmt)
     target_include_directories(${name} PRIVATE
             ${argparse_SOURCE_DIR}/include
             ${fmt_SOURCE_DIR}/include

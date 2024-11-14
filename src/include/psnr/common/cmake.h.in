@@ -3,5 +3,5 @@
 #cmakedefine PSNR_HEADER_ONLY
 #cmakedefine PSNR_BUILD_SHARED_LIBS
 
-#cmakedefine PSNR_VERSION "@PSNR_VERSION@"
+#cmakedefine psnr_VERSION "@psnr_VERSION@"
 #cmakedefine PSNR_COMPILE_INFO "@PSNR_COMPILE_INFO@"
