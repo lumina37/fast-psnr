@@ -8,7 +8,7 @@
 #include "psnr/helper/constexpr/math.hpp"
 #include "v1.hpp"
 
-namespace psnr::_mse::v2 {
+namespace psnr::_mse::v4 {
 
 template <std::unsigned_integral Tv_>
 class MseOp_
@@ -23,7 +23,7 @@ public:
 
         const size_t lgap = lhead - lhs;
         if (lgap != (rhead - rhs)) [[unlikely]] {
-            // not the same alignment
+            // not the same alignmentGd
             // simd load will suffer
             return v1::MseOp_<Tv>::mse(lhs, rhs, len);
         }
@@ -57,6 +57,8 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
     const size_t simd_len = len / sizeof(__m128i);
     const size_t step = sizeof(__m128i) / sizeof(uint8_t);
     constexpr size_t group_len = 1 << (8 * (sizeof(uint32_t) / sizeof(uint16_t)) - 1);
+    const size_t groups = simd_len / group_len - 1;
+    const size_t resi_len = simd_len - groups * group_len;
 
     uint64_t sqrdiff_acc = 0;
     const __m256i zeromask = _mm256_setzero_si256();
@@ -71,22 +73,41 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
         sqrdiff_simd_acc = _mm256_add_epi32(sqrdiff_simd_acc, u16hisqr);
     };
 
-    size_t count = 0;
-    for (size_t i = 0; i < simd_len; i++) {
-        const __m256i u8l = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)lhs_cursor));
-        const __m256i u8r = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)rhs_cursor));
-        dump_unit(u8l, u8r);
+    __m128i u8ls_prefetch = _mm_load_si128((__m128i*)lhs_cursor);
+    __m128i u8rs_prefetch = _mm_load_si128((__m128i*)rhs_cursor);
+    __m256i u8l_prefetch = _mm256_cvtepu8_epi16(u8ls_prefetch);
+    __m256i u8r_prefetch = _mm256_cvtepu8_epi16(u8rs_prefetch);
+    for (size_t igroup = 0; igroup < groups; igroup++) {
+        for (size_t i = 0; i < group_len; i++) {
+            const __m256i u8l = u8l_prefetch;
+            const __m256i u8r = u8r_prefetch;
+            lhs_cursor += step;
+            rhs_cursor += step;
+            u8ls_prefetch = _mm_load_si128((__m128i*)lhs_cursor);
+            u8rs_prefetch = _mm_load_si128((__m128i*)rhs_cursor);
+            u8l_prefetch = _mm256_cvtepu8_epi16(u8ls_prefetch);
+            u8r_prefetch = _mm256_cvtepu8_epi16(u8rs_prefetch);
+            dump_unit(u8l, u8r);
+        }
+
+        auto* tmp = (uint32_t*)&sqrdiff_simd_acc;
+        sqrdiff_acc += (tmp[0] + tmp[1] + tmp[2] + tmp[3] + tmp[4] + tmp[5] + tmp[6] + tmp[7]);
+        sqrdiff_simd_acc = zeromask;
+    }
+
+    for (size_t i = 0; i < (resi_len - 1); i++) {
+        const __m256i u8l = u8l_prefetch;
+        const __m256i u8r = u8r_prefetch;
         lhs_cursor += step;
         rhs_cursor += step;
-
-        count++;
-        if (count == group_len) [[unlikely]] {
-            auto* tmp = (uint32_t*)&sqrdiff_simd_acc;
-            sqrdiff_acc += (tmp[0] + tmp[1] + tmp[2] + tmp[3] + tmp[4] + tmp[5] + tmp[6] + tmp[7]);
-            sqrdiff_simd_acc = zeromask;
-            count = 0;
-        }
+        u8ls_prefetch = _mm_load_si128((__m128i*)lhs_cursor);
+        u8rs_prefetch = _mm_load_si128((__m128i*)rhs_cursor);
+        u8l_prefetch = _mm256_cvtepu8_epi16(u8ls_prefetch);
+        u8r_prefetch = _mm256_cvtepu8_epi16(u8rs_prefetch);
+        dump_unit(u8l, u8r);
     }
+
+    dump_unit(u8l_prefetch, u8r_prefetch);
 
     auto* tmp = (uint32_t*)&sqrdiff_simd_acc;
     sqrdiff_acc += (tmp[0] + tmp[1] + tmp[2] + tmp[3] + tmp[4] + tmp[5] + tmp[6] + tmp[7]);
@@ -103,13 +124,13 @@ uint64_t MseOp_<Tv>::sqrdiff(const Tv* lhs, const Tv* rhs, size_t len) noexcept
 template class MseOp_<uint8_t>;
 using MseOpu8 = MseOp_<uint8_t>;
 
-} // namespace psnr::_mse::v2
+} // namespace psnr::_mse::v4
 
-namespace psnr::mse::v2 {
+namespace psnr::mse::v4 {
 
-namespace _ = _mse::v2;
+namespace _ = _mse::v4;
 
 using _::MseOp_;
 using _::MseOpu8;
 
-} // namespace psnr::mse::v2
+} // namespace psnr::mse::v4
