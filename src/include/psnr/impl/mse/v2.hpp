@@ -99,7 +99,6 @@ uint64_t MseOp_<Tv>::sqrdiff(const Tv* lhs, const Tv* rhs, size_t len) noexcept
     return v1::MseOp_<Tv>::sqrdiff(lhs, rhs, len);
 }
 
-template class MseOp_<uint8_t>;
 using MseOpu8 = MseOp_<uint8_t>;
 
 } // namespace psnr::_mse::v2

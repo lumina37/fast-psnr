@@ -37,7 +37,6 @@ public:
     }
 };
 
-template class MseOp_<uint8_t>;
 using MseOpu8 = MseOp_<uint8_t>;
 
 } // namespace psnr::_mse::v1

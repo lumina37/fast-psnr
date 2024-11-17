@@ -161,9 +161,7 @@ void YuvFrame_<TElem_, Ushift_, Vshift_>::alloc()
 }
 
 using Yuv420Frame = YuvFrame_<uint8_t, 1, 1>;
-template class YuvFrame_<uint8_t, 1, 1>;
 using Yuv420IO = YuvIO_<Yuv420Frame>;
-template class YuvIO_<Yuv420Frame>;
 
 } // namespace _io
 
