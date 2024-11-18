@@ -20,5 +20,16 @@ FetchContent_Declare(argparse
 )
 FetchContent_MakeAvailable(argparse)
 
+include(CTest)
+
+FetchContent_Declare(
+        doctest
+        GIT_REPOSITORY https://github.com/doctest/doctest.git
+        GIT_TAG v2.4.11
+)
+FetchContent_MakeAvailable(doctest)
+include(${doctest_SOURCE_DIR}/scripts/cmake/doctest.cmake)
+
 # Sources
 add_subdirectory(src)
+add_subdirectory(tests)

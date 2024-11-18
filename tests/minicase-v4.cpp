@@ -1,8 +1,8 @@
 #include <cstddef>
+#include <cstdlib>
 #include <iostream>
-#include <memory>
 
-#include "psnr.hpp"
+#include "psnr/impl/mse/v4.hpp"
 
 int main()
 {
@@ -12,7 +12,7 @@ int main()
     const uint8_t* lhs = (uint8_t*)std::malloc(ysize);
     const uint8_t* rhs = (uint8_t*)std::malloc(ysize);
 
-    double psnr = psnr::PsnrOp<psnr::mse::v1::MseOpu8>(lhs, rhs, ysize);
+    uint64_t sqrdiff = psnr::mse::v4::MseOpu8::sqrdiff(lhs, rhs, ysize);
 
-    std::cout << psnr << std::endl;
+    std::cout << sqrdiff << std::endl;
 }
