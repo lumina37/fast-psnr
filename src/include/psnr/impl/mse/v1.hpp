@@ -20,22 +20,25 @@ public:
         return mse;
     }
 
-    [[nodiscard]] static inline uint64_t sqrdiff(const Tv* lhs, const Tv* rhs, const size_t len) noexcept
-    {
-        const Tv* lhs_cursor = lhs;
-        const Tv* rhs_cursor = rhs;
-        uint64_t acc = 0;
-        for (size_t i = 0; i < len; i++) {
-            const int64_t l = *lhs_cursor;
-            const int64_t r = *rhs_cursor;
-            const int64_t diff = l - r;
-            acc += _hp::pow2(diff);
-            lhs_cursor++;
-            rhs_cursor++;
-        }
-        return acc;
-    }
+    [[nodiscard]] static inline uint64_t sqrdiff(const Tv* lhs, const Tv* rhs, size_t len) noexcept;
 };
+
+template <std::unsigned_integral Tv>
+uint64_t MseOp_<Tv>::sqrdiff(const Tv* lhs, const Tv* rhs, size_t len) noexcept
+{
+    const uint8_t* lhs_cursor = lhs;
+    const uint8_t* rhs_cursor = rhs;
+    uint64_t acc = 0;
+    for (size_t i = 0; i < len; i++) {
+        const int16_t l = *lhs_cursor;
+        const int16_t r = *rhs_cursor;
+        const uint16_t sq = _hp::pow2(l - r);
+        acc += (uint64_t)sq;
+        lhs_cursor++;
+        rhs_cursor++;
+    }
+    return acc;
+}
 
 using MseOpu8 = MseOp_<uint8_t>;
 
