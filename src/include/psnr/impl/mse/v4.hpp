@@ -3,6 +3,7 @@
 #include <concepts>
 #include <cstdint>
 #include <immintrin.h>
+#include <limits>
 
 #include "psnr/helper/constexpr/math.hpp"
 #include "v1.hpp"
@@ -22,7 +23,7 @@ public:
 
         const size_t lgap = lhead - lhs;
         if (lgap != (rhead - rhs)) [[unlikely]] {
-            // not the same alignmentGd
+            // not the same alignment
             // simd load will suffer
             return v1::MseOp_<Tv>::mse(lhs, rhs, len);
         }
@@ -61,17 +62,21 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
     const size_t groups = simd_len / group_len - 1;
     const size_t resi_len = simd_len - groups * group_len;
 
-    uint64_t sqrdiff_acc = 0;
-    const __m256i zeromask = _mm256_setzero_si256();
-    __m256i sqrdiff_simd_acc = zeromask;
+    uint64_t sqdacc = 0;
+    __m256i u32sqdacc = _mm256_setzero_si256();
 
     auto dump_unit = [&](const __m256i& u8l, const __m256i& u8r) mutable {
         const __m256i i16diff = _mm256_sub_epi16(u8l, u8r);
-        const __m256i u16sqr = _mm256_mullo_epi16(i16diff, i16diff);
-        const __m256i u32losqr = _mm256_unpacklo_epi16(u16sqr, zeromask);
-        sqrdiff_simd_acc = _mm256_add_epi32(sqrdiff_simd_acc, u32losqr);
-        const __m256i u32hisqr = _mm256_unpackhi_epi16(u16sqr, zeromask);
-        sqrdiff_simd_acc = _mm256_add_epi32(sqrdiff_simd_acc, u32hisqr);
+        const __m256i u32sqd = _mm256_madd_epi16(i16diff, i16diff);
+        u32sqdacc = _mm256_add_epi32(u32sqdacc, u32sqd);
+    };
+
+    auto dump_u32sqdacc = [&]() mutable {
+        __m256i u64sqdacc_p0 = _mm256_cvtepu32_epi64(_mm256_extractf128_si256(u32sqdacc, 0));
+        __m256i u64sqdacc_p1 = _mm256_cvtepu32_epi64(_mm256_extractf128_si256(u32sqdacc, 1));
+        __m256i u64sqdacc = _mm256_add_epi64(u64sqdacc_p0, u64sqdacc_p1);
+        auto* tmp = (uint64_t*)&u64sqdacc;
+        sqdacc += (tmp[0] + tmp[1] + tmp[2] + tmp[3]);
     };
 
     __m128i u8ls_prefetch = _mm_load_si128((__m128i*)lhs_cursor);
@@ -91,9 +96,8 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
             dump_unit(u8l, u8r);
         }
 
-        auto* tmp = (uint32_t*)&sqrdiff_simd_acc;
-        sqrdiff_acc += (tmp[0] + tmp[1] + tmp[2] + tmp[3] + tmp[4] + tmp[5] + tmp[6] + tmp[7]);
-        sqrdiff_simd_acc = zeromask;
+        dump_u32sqdacc();
+        u32sqdacc = _mm256_setzero_si256();
     }
 
     for (size_t i = 0; i < (resi_len - 1); i++) {
@@ -110,10 +114,9 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
 
     dump_unit(u8l_prefetch, u8r_prefetch);
 
-    auto* tmp = (uint32_t*)&sqrdiff_simd_acc;
-    sqrdiff_acc += (tmp[0] + tmp[1] + tmp[2] + tmp[3] + tmp[4] + tmp[5] + tmp[6] + tmp[7]);
+    dump_u32sqdacc();
 
-    return sqrdiff_acc;
+    return sqdacc;
 }
 
 template <std::unsigned_integral Tv>

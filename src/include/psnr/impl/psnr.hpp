@@ -17,7 +17,7 @@ template <concepts::CMseOp TOp, typename Tv, size_t depth = sizeof(Tv) * 8>
 {
     const double mse = TOp::mse(lhs, rhs, len);
     constexpr uint64_t maxval = 1 << depth;
-    const double psnr = 10 * std::log10((double)_hp::pow2(maxval) / mse);
+    const double psnr = 10 * std::log10((double)(maxval * maxval) / mse);
     return psnr;
 }
 

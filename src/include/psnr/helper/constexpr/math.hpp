@@ -6,12 +6,6 @@
 
 namespace psnr::_hp {
 
-template <typename T>
-[[nodiscard]] static constexpr inline T pow2(T num)
-{
-    return num * num;
-}
-
 template <size_t to, std::integral T>
     requires(to % 2 == 0)
 [[nodiscard]] static constexpr inline T roundTo(T v)

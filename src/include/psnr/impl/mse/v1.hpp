@@ -32,8 +32,9 @@ uint64_t MseOp_<Tv>::sqrdiff(const Tv* lhs, const Tv* rhs, size_t len) noexcept
     for (size_t i = 0; i < len; i++) {
         const int16_t l = *lhs_cursor;
         const int16_t r = *rhs_cursor;
-        const uint16_t sq = _hp::pow2(l - r);
-        acc += (uint64_t)sq;
+        const int16_t diff = l - r;
+        const auto sqd = (uint16_t)(diff * diff);
+        acc += sqd;
         lhs_cursor++;
         rhs_cursor++;
     }
