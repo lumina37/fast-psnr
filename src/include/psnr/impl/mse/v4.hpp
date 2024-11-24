@@ -54,8 +54,10 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
     const uint8_t* lhs_cursor = lhs;
     const uint8_t* rhs_cursor = rhs;
     const size_t simd_len = len / sizeof(__m128i);
-    const size_t step = sizeof(__m128i) / sizeof(uint8_t);
-    constexpr size_t group_len = 1 << (8 * (sizeof(uint32_t) / sizeof(uint16_t)) - 1);
+    constexpr size_t step = sizeof(__m128i) / sizeof(uint8_t);
+    constexpr size_t u8max = std::numeric_limits<uint8_t>::max();
+    constexpr size_t u32max = std::numeric_limits<uint32_t>::max();
+    constexpr size_t group_len = u32max / (u8max * u8max * 2);
     const size_t groups = simd_len / group_len - 1;
     const size_t resi_len = simd_len - groups * group_len;
 
@@ -66,10 +68,10 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
     auto dump_unit = [&](const __m256i& u8l, const __m256i& u8r) mutable {
         const __m256i i16diff = _mm256_sub_epi16(u8l, u8r);
         const __m256i u16sqr = _mm256_mullo_epi16(i16diff, i16diff);
-        const __m256i u16losqr = _mm256_unpacklo_epi16(u16sqr, zeromask);
-        sqrdiff_simd_acc = _mm256_add_epi32(sqrdiff_simd_acc, u16losqr);
-        const __m256i u16hisqr = _mm256_unpackhi_epi16(u16sqr, zeromask);
-        sqrdiff_simd_acc = _mm256_add_epi32(sqrdiff_simd_acc, u16hisqr);
+        const __m256i u32losqr = _mm256_unpacklo_epi16(u16sqr, zeromask);
+        sqrdiff_simd_acc = _mm256_add_epi32(sqrdiff_simd_acc, u32losqr);
+        const __m256i u32hisqr = _mm256_unpackhi_epi16(u16sqr, zeromask);
+        sqrdiff_simd_acc = _mm256_add_epi32(sqrdiff_simd_acc, u32hisqr);
     };
 
     __m128i u8ls_prefetch = _mm_load_si128((__m128i*)lhs_cursor);
