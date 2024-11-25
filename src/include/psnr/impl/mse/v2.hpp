@@ -70,8 +70,11 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
     // 累加一组SIMD向量
     auto dump_unit = [&](const __m256i& u8l, const __m256i& u8r) mutable {
         const __m256i i16diff = _mm256_sub_epi16(u8l, u8r);
-        const __m256i u32sqd = _mm256_madd_epi16(i16diff, i16diff);
-        u32sqdacc = _mm256_add_epi32(u32sqdacc, u32sqd);
+        const __m256i u16sqd = _mm256_mullo_epi16(i16diff, i16diff);
+        const __m256i u32sqd_lo = _mm256_unpacklo_epi16(u16sqd, _mm256_setzero_si256());
+        u32sqdacc = _mm256_add_epi32(u32sqdacc, u32sqd_lo);
+        const __m256i u32sqd_hi = _mm256_unpackhi_epi16(u16sqd, _mm256_setzero_si256());
+        u32sqdacc = _mm256_add_epi32(u32sqdacc, u32sqd_hi);
     };
 
     // 将`u32sqdacc`转移到`sqdacc`
