@@ -26,9 +26,9 @@ public:
 template <std::unsigned_integral Tv>
 uint64_t MseOp_<Tv>::sqrdiff(const Tv* lhs, const Tv* rhs, size_t len) noexcept
 {
-    uint32_t acc = 0;
+    uint64_t acc = 0;
     for (size_t i = 0; i < len; i++) {
-        const uint32_t diff = lhs[i] - rhs[i];
+        const int16_t diff = lhs[i] - rhs[i];
         acc += diff * diff;
     }
     return acc;
