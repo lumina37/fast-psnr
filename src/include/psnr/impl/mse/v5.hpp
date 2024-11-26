@@ -59,7 +59,7 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
     constexpr size_t u8max = std::numeric_limits<uint8_t>::max();
     constexpr size_t u32max = std::numeric_limits<uint32_t>::max();
     constexpr size_t unroll = 4;
-    constexpr size_t group_len = _hp::alignDown<unroll>(u32max / (u8max * u8max * 2));
+    constexpr size_t group_len = _hp::alignDown<unroll>(u32max * unroll / (u8max * u8max * 2));
     const size_t group_cnt = m128_cnt / group_len;
     // 还有`nogroup_len`个`__m128i`不成组
     const size_t nogroup_len = m128_cnt - group_cnt * group_len;
@@ -69,20 +69,22 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
     const size_t resi_cnt = nogroup_len - nogroup_unroll_cnt * unroll;
 
     uint64_t sqr_diff_acc = 0;
-    __m256i u32sqr_diff_acc = _mm256_setzero_si256();
+    std::array<__m256i, unroll> u32sqr_diff_acc{};
 
-    auto dump_unit = [&](const __m256i u8l, const __m256i u8r) mutable {
+    auto dump_unit = [&](const __m256i u8l, const __m256i u8r, const size_t i) mutable {
         const __m256i i16diff = _mm256_sub_epi16(u8l, u8r);
         const __m256i u32sqr_diff = _mm256_madd_epi16(i16diff, i16diff);
-        u32sqr_diff_acc = _mm256_add_epi32(u32sqr_diff_acc, u32sqr_diff);
+        u32sqr_diff_acc[i] = _mm256_add_epi32(u32sqr_diff_acc[i], u32sqr_diff);
     };
 
     auto dump_u32sqr_diff_acc = [&]() mutable {
-        __m256i u64sqr_diff_acc_p0 = _mm256_cvtepu32_epi64(_mm256_extractf128_si256(u32sqr_diff_acc, 0));
-        __m256i u64sqr_diff_acc_p1 = _mm256_cvtepu32_epi64(_mm256_extractf128_si256(u32sqr_diff_acc, 1));
-        __m256i u64sqr_diff_acc = _mm256_add_epi64(u64sqr_diff_acc_p0, u64sqr_diff_acc_p1);
-        auto* tmp = (uint64_t*)&u64sqr_diff_acc;
-        sqr_diff_acc += (tmp[0] + tmp[1] + tmp[2] + tmp[3]);
+        for (size_t i = 0; i < unroll; i++) {
+            __m256i u64sqr_diff_acc_p0 = _mm256_cvtepu32_epi64(_mm256_extractf128_si256(u32sqr_diff_acc[i], 0));
+            __m256i u64sqr_diff_acc_p1 = _mm256_cvtepu32_epi64(_mm256_extractf128_si256(u32sqr_diff_acc[i], 1));
+            __m256i u64sqr_diff_acc = _mm256_add_epi64(u64sqr_diff_acc_p0, u64sqr_diff_acc_p1);
+            auto* tmp = (uint64_t*)&u64sqr_diff_acc;
+            sqr_diff_acc += (tmp[0] + tmp[1] + tmp[2] + tmp[3]);
+        }
     };
 
     for (size_t igroup = 0; igroup < group_cnt; igroup++) {
@@ -90,21 +92,23 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
             for (size_t j = 0; j < unroll; j++) {
                 const __m256i u8l = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)lhs_cursor));
                 const __m256i u8r = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)rhs_cursor));
-                dump_unit(u8l, u8r);
+                dump_unit(u8l, u8r, j);
                 lhs_cursor += step;
                 rhs_cursor += step;
             }
         }
 
         dump_u32sqr_diff_acc();
-        u32sqr_diff_acc = _mm256_setzero_si256();
+        for (size_t j = 0; j < unroll; j++) {
+            u32sqr_diff_acc[j] = _mm256_setzero_si256();
+        }
     }
 
     for (size_t i = 0; i < nogroup_unroll_cnt; i++) {
         for (size_t j = 0; j < unroll; j++) {
             const __m256i u8l = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)lhs_cursor));
             const __m256i u8r = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)rhs_cursor));
-            dump_unit(u8l, u8r);
+            dump_unit(u8l, u8r, j);
             lhs_cursor += step;
             rhs_cursor += step;
         }
@@ -113,7 +117,7 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
     for (size_t i = 0; i < resi_cnt; i++) {
         const __m256i u8l = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)lhs_cursor));
         const __m256i u8r = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)rhs_cursor));
-        dump_unit(u8l, u8r);
+        dump_unit(u8l, u8r, i);
         lhs_cursor += step;
         rhs_cursor += step;
     }
