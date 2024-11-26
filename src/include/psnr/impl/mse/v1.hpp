@@ -26,17 +26,10 @@ public:
 template <std::unsigned_integral Tv>
 uint64_t MseOp_<Tv>::sqrdiff(const Tv* lhs, const Tv* rhs, size_t len) noexcept
 {
-    const uint8_t* lhs_cursor = lhs;
-    const uint8_t* rhs_cursor = rhs;
-    uint64_t acc = 0;
+    uint32_t acc = 0;
     for (size_t i = 0; i < len; i++) {
-        const int16_t l = *lhs_cursor;
-        const int16_t r = *rhs_cursor;
-        const int16_t diff = l - r;
-        const auto sqd = (uint16_t)(diff * diff);
-        acc += sqd;
-        lhs_cursor++;
-        rhs_cursor++;
+        const uint32_t diff = lhs[i] - rhs[i];
+        acc += diff * diff;
     }
     return acc;
 }

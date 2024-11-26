@@ -60,21 +60,21 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
     constexpr size_t u32max = std::numeric_limits<uint32_t>::max();
     constexpr size_t group_len = u32max / (u8max * u8max * 2);
 
-    uint64_t sqdacc = 0;
-    __m256i u32sqdacc = _mm256_setzero_si256();
+    uint64_t sqr_diff_acc = 0;
+    __m256i u32sqr_diff_acc = _mm256_setzero_si256();
 
-    auto dump_unit = [&](const __m256i& u8l, const __m256i& u8r) mutable {
+    auto dump_unit = [&](const __m256i u8l, const __m256i u8r) mutable {
         const __m256i i16diff = _mm256_sub_epi16(u8l, u8r);
-        const __m256i u32sqd = _mm256_madd_epi16(i16diff, i16diff);
-        u32sqdacc = _mm256_add_epi32(u32sqdacc, u32sqd);
+        const __m256i u32sqr_diff = _mm256_madd_epi16(i16diff, i16diff);
+        u32sqr_diff_acc = _mm256_add_epi32(u32sqr_diff_acc, u32sqr_diff);
     };
 
-    auto dump_u32sqdacc = [&]() mutable {
-        __m256i u64sqdacc_p0 = _mm256_cvtepu32_epi64(_mm256_extractf128_si256(u32sqdacc, 0));
-        __m256i u64sqdacc_p1 = _mm256_cvtepu32_epi64(_mm256_extractf128_si256(u32sqdacc, 1));
-        __m256i u64sqdacc = _mm256_add_epi64(u64sqdacc_p0, u64sqdacc_p1);
-        auto* tmp = (uint64_t*)&u64sqdacc;
-        sqdacc += (tmp[0] + tmp[1] + tmp[2] + tmp[3]);
+    auto dump_u32sqr_diff_acc = [&]() mutable {
+        __m256i u64sqr_diff_acc_p0 = _mm256_cvtepu32_epi64(_mm256_extractf128_si256(u32sqr_diff_acc, 0));
+        __m256i u64sqr_diff_acc_p1 = _mm256_cvtepu32_epi64(_mm256_extractf128_si256(u32sqr_diff_acc, 1));
+        __m256i u64sqr_diff_acc = _mm256_add_epi64(u64sqr_diff_acc_p0, u64sqr_diff_acc_p1);
+        auto* tmp = (uint64_t*)&u64sqr_diff_acc;
+        sqr_diff_acc += (tmp[0] + tmp[1] + tmp[2] + tmp[3]);
     };
 
     size_t count = 0;
@@ -87,15 +87,15 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
         count++;
 
         if (count == group_len) [[unlikely]] {
-            dump_u32sqdacc();
-            u32sqdacc = _mm256_setzero_si256();
+            dump_u32sqr_diff_acc();
+            u32sqr_diff_acc = _mm256_setzero_si256();
             count = 0;
         }
     }
 
-    dump_u32sqdacc();
+    dump_u32sqr_diff_acc();
 
-    return sqdacc;
+    return sqr_diff_acc;
 }
 
 template <std::unsigned_integral Tv>

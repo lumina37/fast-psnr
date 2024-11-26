@@ -59,64 +59,50 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
     constexpr size_t u8max = std::numeric_limits<uint8_t>::max();
     constexpr size_t u32max = std::numeric_limits<uint32_t>::max();
     constexpr size_t group_len = u32max / (u8max * u8max * 2);
-    const size_t groups = simd_len / group_len - 1;
+    const size_t groups = simd_len / group_len;
     const size_t resi_len = simd_len - groups * group_len;
 
-    uint64_t sqdacc = 0;
-    __m256i u32sqdacc = _mm256_setzero_si256();
+    uint64_t sqr_diff_acc = 0;
+    __m256i u32sqr_diff_acc = _mm256_setzero_si256();
 
-    auto dump_unit = [&](const __m256i& u8l, const __m256i& u8r) mutable {
+    auto dump_unit = [&](const __m256i u8l, const __m256i u8r) mutable {
         const __m256i i16diff = _mm256_sub_epi16(u8l, u8r);
-        const __m256i u32sqd = _mm256_madd_epi16(i16diff, i16diff);
-        u32sqdacc = _mm256_add_epi32(u32sqdacc, u32sqd);
+        const __m256i u32sqr_diff = _mm256_madd_epi16(i16diff, i16diff);
+        u32sqr_diff_acc = _mm256_add_epi32(u32sqr_diff_acc, u32sqr_diff);
     };
 
-    auto dump_u32sqdacc = [&]() mutable {
-        __m256i u64sqdacc_p0 = _mm256_cvtepu32_epi64(_mm256_extractf128_si256(u32sqdacc, 0));
-        __m256i u64sqdacc_p1 = _mm256_cvtepu32_epi64(_mm256_extractf128_si256(u32sqdacc, 1));
-        __m256i u64sqdacc = _mm256_add_epi64(u64sqdacc_p0, u64sqdacc_p1);
-        auto* tmp = (uint64_t*)&u64sqdacc;
-        sqdacc += (tmp[0] + tmp[1] + tmp[2] + tmp[3]);
+    auto dump_u32sqr_diff_acc = [&]() mutable {
+        __m256i u64sqr_diff_acc_p0 = _mm256_cvtepu32_epi64(_mm256_extractf128_si256(u32sqr_diff_acc, 0));
+        __m256i u64sqr_diff_acc_p1 = _mm256_cvtepu32_epi64(_mm256_extractf128_si256(u32sqr_diff_acc, 1));
+        __m256i u64sqr_diff_acc = _mm256_add_epi64(u64sqr_diff_acc_p0, u64sqr_diff_acc_p1);
+        auto* tmp = (uint64_t*)&u64sqr_diff_acc;
+        sqr_diff_acc += (tmp[0] + tmp[1] + tmp[2] + tmp[3]);
     };
 
-    __m128i u8ls_prefetch = _mm_load_si128((__m128i*)lhs_cursor);
-    __m128i u8rs_prefetch = _mm_load_si128((__m128i*)rhs_cursor);
-    __m256i u8l_prefetch = _mm256_cvtepu8_epi16(u8ls_prefetch);
-    __m256i u8r_prefetch = _mm256_cvtepu8_epi16(u8rs_prefetch);
     for (size_t igroup = 0; igroup < groups; igroup++) {
         for (size_t i = 0; i < group_len; i++) {
-            const __m256i u8l = u8l_prefetch;
-            const __m256i u8r = u8r_prefetch;
+            const __m256i u8l = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)lhs_cursor));
+            const __m256i u8r = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)rhs_cursor));
+            dump_unit(u8l, u8r);
             lhs_cursor += step;
             rhs_cursor += step;
-            u8ls_prefetch = _mm_load_si128((__m128i*)lhs_cursor);
-            u8rs_prefetch = _mm_load_si128((__m128i*)rhs_cursor);
-            u8l_prefetch = _mm256_cvtepu8_epi16(u8ls_prefetch);
-            u8r_prefetch = _mm256_cvtepu8_epi16(u8rs_prefetch);
-            dump_unit(u8l, u8r);
         }
 
-        dump_u32sqdacc();
-        u32sqdacc = _mm256_setzero_si256();
+        dump_u32sqr_diff_acc();
+        u32sqr_diff_acc = _mm256_setzero_si256();
     }
 
-    for (size_t i = 0; i < (resi_len - 1); i++) {
-        const __m256i u8l = u8l_prefetch;
-        const __m256i u8r = u8r_prefetch;
+    for (size_t i = 0; i < resi_len; i++) {
+        const __m256i u8l = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)lhs_cursor));
+        const __m256i u8r = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)rhs_cursor));
+        dump_unit(u8l, u8r);
         lhs_cursor += step;
         rhs_cursor += step;
-        u8ls_prefetch = _mm_load_si128((__m128i*)lhs_cursor);
-        u8rs_prefetch = _mm_load_si128((__m128i*)rhs_cursor);
-        u8l_prefetch = _mm256_cvtepu8_epi16(u8ls_prefetch);
-        u8r_prefetch = _mm256_cvtepu8_epi16(u8rs_prefetch);
-        dump_unit(u8l, u8r);
     }
 
-    dump_unit(u8l_prefetch, u8r_prefetch);
+    dump_u32sqr_diff_acc();
 
-    dump_u32sqdacc();
-
-    return sqdacc;
+    return sqr_diff_acc;
 }
 
 template <std::unsigned_integral Tv>
