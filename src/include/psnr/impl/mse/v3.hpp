@@ -54,7 +54,7 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
 {
     const uint8_t* lhs_cursor = lhs;
     const uint8_t* rhs_cursor = rhs;
-    const size_t simd_len = len / sizeof(__m128i);
+    const size_t m128_cnt = len / sizeof(__m128i);
     constexpr size_t step = sizeof(__m128i) / sizeof(uint8_t);
     constexpr size_t u8max = std::numeric_limits<uint8_t>::max();
     constexpr size_t u32max = std::numeric_limits<uint32_t>::max();
@@ -78,7 +78,7 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
     };
 
     size_t count = 0;
-    for (size_t i = 0; i < simd_len; i++) {
+    for (size_t i = 0; i < m128_cnt; i++) {
         const __m256i u8l = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)lhs_cursor));
         const __m256i u8r = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)rhs_cursor));
         dump_unit(u8l, u8r);

@@ -54,15 +54,15 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
 {
     const uint8_t* lhs_cursor = lhs;
     const uint8_t* rhs_cursor = rhs;
-    const size_t simd_len = len / sizeof(__m128i);
+    const size_t m128_cnt = len / sizeof(__m128i);
     constexpr size_t step = sizeof(__m128i) / sizeof(uint8_t);
     constexpr size_t u8max = std::numeric_limits<uint8_t>::max();
     constexpr size_t u32max = std::numeric_limits<uint32_t>::max();
     constexpr size_t group_len = u32max / (u8max * u8max * 2);
-    // 总共groups大组
-    const size_t groups = simd_len / group_len;
+    // 总共group_cnt大组
+    const size_t group_cnt = m128_cnt / group_len;
     // 还剩下resi_len个小组
-    const size_t resi_len = simd_len - groups * group_len;
+    const size_t resi_len = m128_cnt - group_cnt * group_len;
 
     uint64_t sqr_diff_acc = 0;
     __m256i u32sqr_diff_acc = _mm256_setzero_si256();
@@ -81,7 +81,7 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
         sqr_diff_acc += (tmp[0] + tmp[1] + tmp[2] + tmp[3]);
     };
 
-    for (size_t igroup = 0; igroup < groups; igroup++) {
+    for (size_t igroup = 0; igroup < group_cnt; igroup++) {
         for (size_t i = 0; i < group_len; i++) {
             const __m256i u8l = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)lhs_cursor));
             const __m256i u8r = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)rhs_cursor));

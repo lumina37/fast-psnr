@@ -54,8 +54,8 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
 {
     const uint8_t* lhs_cursor = lhs;
     const uint8_t* rhs_cursor = rhs;
-    // 以__m128i为加载单元，`len`中共包含`simd_len`组__m128i
-    const size_t simd_len = len / sizeof(__m128i);
+    // 以__m128i为加载单元，`len`中共包含`m128_cnt`组__m128i
+    const size_t m128_cnt = len / sizeof(__m128i);
     // step是加载步长，也就是16字节
     constexpr size_t step = sizeof(__m128i) / sizeof(uint8_t);
     // 为避免uint32溢出，每隔`group_len`组就需要把累加值dump一次到uint64
@@ -87,7 +87,7 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
     };
 
     size_t count = 0;
-    for (size_t i = 0; i < simd_len; i++) {
+    for (size_t i = 0; i < m128_cnt; i++) {
         const __m256i u8l = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)lhs_cursor));
         const __m256i u8r = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)rhs_cursor));
         dump_unit(u8l, u8r);

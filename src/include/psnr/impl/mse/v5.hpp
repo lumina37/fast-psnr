@@ -54,13 +54,19 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
 {
     const uint8_t* lhs_cursor = lhs;
     const uint8_t* rhs_cursor = rhs;
-    const size_t simd_len = len / sizeof(__m128i);
+    const size_t m128_cnt = len / sizeof(__m128i);
     constexpr size_t step = sizeof(__m128i) / sizeof(uint8_t);
     constexpr size_t u8max = std::numeric_limits<uint8_t>::max();
     constexpr size_t u32max = std::numeric_limits<uint32_t>::max();
-    constexpr size_t group_len = u32max / (u8max * u8max * 2);
-    const size_t groups = simd_len / group_len;
-    const size_t resi_len = simd_len - groups * group_len;
+    constexpr size_t unroll = 4;
+    constexpr size_t group_len = _hp::alignDown<unroll>(u32max / (u8max * u8max * 2));
+    const size_t group_cnt = m128_cnt / group_len;
+    // 还有`nogroup_len`个`__m128i`不成组
+    const size_t nogroup_len = m128_cnt - group_cnt * group_len;
+    // 将它们打包成`nogroup_unroll_cnt`个长`unroll`的小组以执行循环展开
+    const size_t nogroup_unroll_cnt = nogroup_len / unroll;
+    // 剩下`resi_cnt`个`__m128i`无法做向量展开，单独处理
+    const size_t resi_cnt = nogroup_len - nogroup_unroll_cnt * unroll;
 
     uint64_t sqr_diff_acc = 0;
     __m256i u32sqr_diff_acc = _mm256_setzero_si256();
@@ -79,20 +85,32 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
         sqr_diff_acc += (tmp[0] + tmp[1] + tmp[2] + tmp[3]);
     };
 
-    for (size_t igroup = 0; igroup < groups; igroup++) {
-        for (size_t i = 0; i < group_len; i++) {
-            const __m256i u8l = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)lhs_cursor));
-            const __m256i u8r = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)rhs_cursor));
-            dump_unit(u8l, u8r);
-            lhs_cursor += step;
-            rhs_cursor += step;
+    for (size_t igroup = 0; igroup < group_cnt; igroup++) {
+        for (size_t i = 0; i < (group_len / unroll); i++) {
+            for (size_t j = 0; j < unroll; j++) {
+                const __m256i u8l = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)lhs_cursor));
+                const __m256i u8r = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)rhs_cursor));
+                dump_unit(u8l, u8r);
+                lhs_cursor += step;
+                rhs_cursor += step;
+            }
         }
 
         dump_u32sqr_diff_acc();
         u32sqr_diff_acc = _mm256_setzero_si256();
     }
 
-    for (size_t i = 0; i < resi_len; i++) {
+    for (size_t i = 0; i < nogroup_unroll_cnt; i++) {
+        for (size_t j = 0; j < unroll; j++) {
+            const __m256i u8l = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)lhs_cursor));
+            const __m256i u8r = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)rhs_cursor));
+            dump_unit(u8l, u8r);
+            lhs_cursor += step;
+            rhs_cursor += step;
+        }
+    }
+
+    for (size_t i = 0; i < resi_cnt; i++) {
         const __m256i u8l = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)lhs_cursor));
         const __m256i u8r = _mm256_cvtepu8_epi16(_mm_load_si128((__m128i*)rhs_cursor));
         dump_unit(u8l, u8r);
