@@ -59,6 +59,7 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
     constexpr size_t step = sizeof(__m128i) / sizeof(uint8_t);
     constexpr size_t u8max = std::numeric_limits<uint8_t>::max();
     constexpr size_t u32max = std::numeric_limits<uint32_t>::max();
+    // 做4x循环展开
     constexpr size_t unroll = 4;
     constexpr size_t group_len = (u32max / (u8max * u8max * 2)) * unroll;
     const size_t group_cnt = m128_cnt / group_len;
@@ -70,6 +71,7 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
     const size_t resi_cnt = nogroup_len - nogroup_unroll_cnt * unroll;
 
     uint64_t sqr_diff_acc = 0;
+    // 使用独立的累加器
     std::array<__m256i, unroll> u32sqr_diff_acc{};
 
     auto dump_unit = [&](const __m256i u8l, const __m256i u8r, const size_t i) mutable {
