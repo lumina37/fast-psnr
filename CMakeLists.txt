@@ -14,9 +14,12 @@ configure_file("${PSNR_CONFIGURE_DIR}/cmake.h.in" "${PSNR_CONFIGURE_DIR}/cmake.h
 # Dependencies
 include(FetchContent)
 
-FetchContent_Declare(argparse
-        GIT_REPOSITORY https://github.com/p-ranav/argparse.git
-        GIT_TAG v3.1
+set(PSNR_ARGPARSE_PATH "https://github.com/p-ranav/argparse/archive/refs/tags/v3.1.tar.gz" CACHE STRING
+        "Specifies the path of argparse")
+FetchContent_Declare(
+        argparse
+        DOWNLOAD_EXTRACT_TIMESTAMP ON
+        URL ${PSNR_ARGPARSE_PATH}
 )
 FetchContent_MakeAvailable(argparse)
 
