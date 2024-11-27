@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include <array>
 #include <concepts>
 #include <cstdint>
 #include <immintrin.h>
@@ -58,8 +59,8 @@ uint64_t MseOp_<uint8_t>::sqrdiff(const uint8_t* lhs, const uint8_t* rhs, size_t
     constexpr size_t step = sizeof(__m128i) / sizeof(uint8_t);
     constexpr size_t u8max = std::numeric_limits<uint8_t>::max();
     constexpr size_t u32max = std::numeric_limits<uint32_t>::max();
-    constexpr size_t unroll = 4;
-    constexpr size_t group_len = _hp::alignDown<unroll>(u32max * unroll / (u8max * u8max * 2));
+    constexpr size_t unroll = 2;
+    constexpr size_t group_len = (u32max / (u8max * u8max * 2)) * unroll;
     const size_t group_cnt = m128_cnt / group_len;
     // 还有`nogroup_len`个`__m128i`不成组
     const size_t nogroup_len = m128_cnt - group_cnt * group_len;

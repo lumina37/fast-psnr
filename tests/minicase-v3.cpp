@@ -6,13 +6,13 @@
 
 int main()
 {
-    constexpr auto width = 1920;
-    constexpr auto height = 1080;
-    constexpr size_t ysize = width * height;
-    const uint8_t* lhs = (uint8_t*)std::malloc(ysize);
-    const uint8_t* rhs = (uint8_t*)std::malloc(ysize);
+    constexpr size_t size = 2ull * 1024 * 1024 * 1024;
+    auto* lhs = (uint8_t*)std::malloc(size);
+    std::memset(lhs, 0, size);
+    auto* rhs = (uint8_t*)std::malloc(size);
+    std::memset(lhs, 20, size);
 
-    uint64_t sqrdiff = psnr::mse::v3::MseOpu8::sqrdiff(lhs, rhs, ysize);
+    uint64_t sqrdiff = psnr::mse::v3::MseOpu8::sqrdiff(lhs, rhs, size);
 
     std::cout << sqrdiff << std::endl;
 }
